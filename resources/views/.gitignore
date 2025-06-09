@@ -1,0 +1,27 @@
+# Abaikan folder dependencies yang diinstal oleh Composer dan NPM
+/vendor/
+/node_modules/
+
+# Abaikan file Environment yang berisi data sensitif
+# Ini adalah yang paling penting untuk keamanan!
+.env
+
+# Abaikan file log
+/storage/logs/*.log
+*.log
+
+# Abaikan file cache dan file sesi
+/bootstrap/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/framework/cache/
+
+# Abaikan folder yang dibuat oleh Laravel untuk symlink
+/public/storage
+
+# Abaikan file spesifik dari OS
+.DS_Store
+Thumbs.db
+
+# Abaikan file yang dihasilkan oleh tool seperti PHPUnit
+.phpunit.result.cache

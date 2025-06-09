@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    use Notifiable;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+        'nib',
+        'lokasi',
+        'akun_facebook',
+        'akun_instagram',
+        'total_pengikut_facebook',
+        'total_pengikut_instagram',
+        'profile_image',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    public function kontens()
+    {
+        return $this->hasMany(Konten::class, 'user_id');
+    }
+}
