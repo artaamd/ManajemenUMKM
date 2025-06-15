@@ -10,6 +10,8 @@
     <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('assets/img/logokota.png') }}">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -19,6 +21,13 @@
         .container-fluid {
             display: flex;
             min-height: 100vh;
+        }
+         .sidebar .text-center .img-fluid {
+            max-width: 40px; /* Atur lebar maksimal logo */
+            height: auto; /* Tinggi akan menyesuaikan secara otomatis */
+            display: block; /* Pastikan gambar dianggap sebagai blok */
+            margin-left: auto; /* Atur margin kiri otomatis */
+            margin-right: auto; /* Atur margin kanan otomatis */
         }
         .sidebar {
             width: 250px;
@@ -31,6 +40,11 @@
             left: 0;
             z-index: 1000;
             transition: all 0.3s ease;
+        }
+        .sidebar .logo img {
+            height: 24px;
+            width: auto;
+            margin-bottom: 20px;
         }
         .sidebar .nav-link {
             color: #333;
@@ -105,6 +119,9 @@
             .content {
                 margin-left: 0;
             }
+            .sidebar .logo img {
+                height: 20px; /* Ukuran lebih kecil untuk mobile */
+            }
         }
     </style>
     <!-- Tambahkan window.chartData sebelum app.js dimuat -->
@@ -120,11 +137,11 @@
     <div class="container-fluid">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="text-center mb-4">
+            <div class="text-center mb-1">
                 <a href="{{ route('dashboard') }}">
-                    <img src="{{ asset('img/logokota.png') }}" alt="Logo Kota" class="img-fluid">
+                    <img src="{{ asset('assets/img/logokota.png') }}" alt="Logo Kota" class="img-fluid">
                 </a>
-                <h4 class="fw-bold">Manajemen UMKM</h4>
+                <h4 class="fw-bold">Manajemen Konten Digital UMKM</h4>
             </div>
             <nav>
                 <ul class="nav flex-column">
@@ -155,12 +172,12 @@
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('konten.index') }}" class="nav-link {{ request()->routeIs('konten.*') ? 'active' : '' }}">
-                                <i class="bi bi-file-earmark-text"></i> Manajemen Konten
+                                <i class="bi bi-file-earmark-text"></i> Manajemen Penjadwalan Konten
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('analitik.index') }}" class="nav-link {{ request()->routeIs('analitik.*') ? 'active' : '' }}">
-                                <i class="bi bi-bar-chart"></i> Analitik
+                                <i class="bi bi-bar-chart"></i> Grading Engangement Rate
                             </a>
                         </li>
                         <li class="nav-item">

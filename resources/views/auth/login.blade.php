@@ -2,12 +2,12 @@
 @section('title', 'Login UMKM')
 @section('content')
     <div class="auth-card">
-        <!-- Judul -->
+         <!-- Judul dan Logo -->
         <div class="text-center mb-4">
+            <img src="{{ asset('assets/img/logokota.png') }}" alt="Logo Kota" class="img-fluid mb-3 mx-auto" style="height: 40px; display: block;">
             <h3 class="fw-bold">Selamat Datang</h3>
             <p class="text-muted">Masuk atau daftar sebagai UMKM</p>
         </div>
-
         <!-- Tab Navigasi -->
         <ul class="nav nav-tabs mb-4" id="authTab" role="tablist">
             <li class="nav-item" role="presentation">

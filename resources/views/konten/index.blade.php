@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Manajemen Konten')
+@section('title', 'Manajemen Penjadwalan Konten')
 @section('content')
     <div class="container-fluid p-0 m-0">
         <div class="row m-0">
@@ -38,7 +38,7 @@
                                                 <th class="py-3">Tanggal Dibuat</th>
                                                 <th class="py-3">Tanggal Publish</th>
                                                 <th class="py-3">Status</th>
-                                                <th class="py-3 text-center">Aksi</th>
+                                        
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -67,11 +67,7 @@
                                                             {{ now()->gte($konten->created_at) ? 'Sudah Terunggah' : 'Draft' }}
                                                         </span>
                                                     </td>
-                                                    <td class="py-3 text-center">
-                                                        <a href="{{ route('konten.show', $konten->id) }}" class="btn btn-info btn-sm me-2" data-bs-toggle="tooltip" data-bs-title="Lihat Detail">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-                                                    </td>
+                                                   
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -127,9 +123,7 @@
             .table th:nth-child(7), .table td:nth-child(7) { /* Status */
                 width: 10%;
             }
-            .table th:nth-child(8), .table td:nth-child(8) { /* Aksi */
-                width: 5%;
-            }
+           
             .thumbnail-img {
                 max-width: 60px;
                 max-height: 60px;
