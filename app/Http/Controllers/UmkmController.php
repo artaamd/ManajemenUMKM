@@ -15,11 +15,11 @@ class UmkmController extends Controller
     {
         $user = auth()->user();
         $umkms = [];
+        $umkms_per_kecamatan = [];
         $content_counts = [
             'instagram' => 0,
             'facebook' => 0,
         ];
-
         $content_trends = [
             'instagram' => [],
             'facebook' => [],
@@ -28,6 +28,27 @@ class UmkmController extends Controller
 
         if ($user->role === 'admin') {
             $umkms = User::where('role', 'umkm')->get();
+            // UMKM per kecamatan
+            $umkms_per_kecamatan = User::where('role', 'umkm')
+                ->groupBy('lokasi')
+                ->selectRaw('lokasi, COUNT(*) as jumlah')
+                ->pluck('jumlah', 'lokasi')
+                ->toArray();
+            // Ambil semua konten untuk UMKM
+            $umkm_ids = User::where('role', 'umkm')->pluck('id')->toArray();
+            // Query konten dengan case-insensitive dan log untuk debug
+            $content_counts['instagram'] = Konten::whereRaw('LOWER(platform) = ?', ['instagram'])
+                ->whereIn('user_id', $umkm_ids)
+                ->count();
+            $content_counts['facebook'] = Konten::whereRaw('LOWER(platform) = ?', ['facebook'])
+                ->whereIn('user_id', $umkm_ids)
+                ->count();
+            // Log untuk cek data
+            \Log::info('Dashboard Admin Data:', [
+                'umkm_ids' => $umkm_ids,
+                'instagram_count' => $content_counts['instagram'],
+                'facebook_count' => $content_counts['facebook'],
+            ]);
         } else {
             $content_counts['instagram'] = $user->kontens()
                 ->where('platform', 'instagram')
@@ -69,9 +90,10 @@ class UmkmController extends Controller
 
         $notifications = $user->unreadNotifications;
 
-        return view('dashboard', compact('user', 'umkms', 'content_counts', 'notifications', 'content_trends'));
+        return view('dashboard', compact('user', 'umkms', 'umkms_per_kecamatan', 'content_counts', 'notifications', 'content_trends'));
     }
 
+    // Method lain tidak diubah
     public function report()
     {
         $umkms = User::where('role', 'umkm')->get();
@@ -172,7 +194,6 @@ class UmkmController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // Tambahkan method edit
     public function edit($id)
     {
         $umkm = User::findOrFail($id);
@@ -182,7 +203,6 @@ class UmkmController extends Controller
         return view('umkm.edit', compact('umkm'));
     }
 
-    // Tambahkan method update
     public function update(Request $request, $id)
     {
         $umkm = User::findOrFail($id);
@@ -218,7 +238,6 @@ class UmkmController extends Controller
         return redirect()->route('laporan.umkm')->with('success', 'Data UMKM berhasil diperbarui!');
     }
 
-    // Tambahkan method destroy
     public function destroy($id)
     {
         $umkm = User::findOrFail($id);

@@ -109,7 +109,6 @@
                                                             <th>Grade</th>
                                                             <th>Tanggal Publish</th>
                                                             <th>Durasi</th>
-                                                            <th>Status</th>
                                                             <th>Screenshot</th>
                                                         </tr>
                                                     </thead>
@@ -138,11 +137,7 @@
                                                                 </td>
                                                                 <td>{{ $konten->tanggal_publish ?? '-' }}</td>
                                                                 <td>{{ $duration }}</td>
-                                                                <td>
-                                                                    <span class="badge {{ $konten->status == 'published' ? 'bg-success' : 'bg-secondary' }}">
-                                                                        {{ $konten->status ?? 'Tidak Diketahui' }}
-                                                                    </span>
-                                                                </td>
+                            
                                                                 <td>
                                                                     @if ($konten->analitik->screenshot)
                                                                         <a href="{{ Storage::url($konten->analitik->screenshot) }}" target="_blank">

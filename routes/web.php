@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan/umkm/cetak-excel', [LaporanController::class, 'cetakUmkmExcel'])->name('laporan.umkm.cetak-excel')->middleware('role:admin');
     Route::get('/konten/{id}/edit-engagement', [KontenController::class, 'editEngagement'])->name('konten.editEngagement')->middleware('role:umkm');
     Route::post('/konten/{id}/update-engagement', [KontenController::class, 'updateEngagement'])->name('konten.updateEngagement')->middleware('role:umkm');
+    
 
     // Tambahkan route untuk edit dan hapus UMKM (hanya untuk admin)
     Route::get('/umkm/{id}/edit', [UmkmController::class, 'edit'])->name('umkm.edit')->middleware('role:admin');
