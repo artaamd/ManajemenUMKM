@@ -7,7 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Konten extends Model
 {
     protected $fillable = [
-        'judul', 'platform', 'tanggal_publish', 'durasi', 'status', 'user_id',
+        'judul',
+        'deskripsi', // <-- DITAMBAHKAN DI SINI
+        'image',     // <-- DITAMBAHKAN JUGA UNTUK GAMBAR
+        'platform',
+        'tanggal_publish',
+        'durasi',
+        'status',
+        'user_id',
     ];
 
     // Relasi balik ke User
@@ -19,6 +26,6 @@ class Konten extends Model
     // Relasi ke Analitik (jika ada)
     public function analitik()
     {
-        return $this->hasOne(Analitik::class, 'konten_id'); // Sesuaikan dengan model Analitik jika ada
+        return $this->hasOne(Analitik::class, 'konten_id');
     }
 }

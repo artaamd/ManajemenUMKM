@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-     <link rel="icon" type="image/png" href="{{ asset('assets/img/logokota.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/img/logokota.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Manajemen UMKM')</title>
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    
+    {{-- CUKUP GUNAKAN VITE UNTUK MEMANGGIL SEMUA ASET --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
         body {
             background: linear-gradient(135deg, #6e8efb, #a777e3);
@@ -16,13 +19,14 @@
             margin: 0;
             font-family: 'Poppins', sans-serif;
         }
+        /* ... sisa style kustom Anda tetap sama ... */
         .auth-card {
             background: #fff;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            max-width: 400px;
-            width: 100%;
+            padding: 2.5rem;
+            max-width: 900px; /* Lebarkan sedikit untuk 2 kolom */
+            width: 200%;
             animation: fadeIn 0.5s ease-in-out;
         }
         @keyframes fadeIn {
@@ -40,14 +44,13 @@
         .text-primary {
             color: #6e8efb !important;
         }
-        @media (max-width: 576px) {
+        @media (max-width: 768px) {
             .auth-card {
                 margin: 1rem;
                 padding: 1.5rem;
             }
         }
     </style>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     @yield('content')

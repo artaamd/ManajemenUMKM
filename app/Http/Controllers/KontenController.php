@@ -12,7 +12,7 @@ class KontenController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $kontens = $user->kontens()->with('analitik')->get(); // Eager load analitik
+        $kontens = $user->kontens()->with('analitik')->latest()->get(); // Mengurutkan dari yang terbaru
         return view('konten.index', compact('user', 'kontens'));
     }
 
@@ -25,42 +25,44 @@ class KontenController extends Controller
         return view('konten.create', compact('user'));
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'platform' => 'required|in:instagram,facebook',
-            'tanggal_publish' => 'required|date',
-            'status' => 'required|in:draft,published,scheduled',
-        ]);
+  // Ganti seluruh method store() Anda dengan kode ini
 
-        $user = auth()->user();
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'judul' => 'required|string|max:255',
+        'deskripsi' => 'required|string',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'platform' => 'required|in:instagram,facebook',
+        'tanggal_publish' => 'required|date',
+        'status' => 'required|in:draft,published,scheduled',
+    ]);
 
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('images', 'public');
-        }
+    $user = auth()->user();
 
-        $konten = Konten::create([
-            'user_id' => $user->id,
-            'judul' => $validated['judul'],
-            'deskripsi' => $validated['deskripsi'],
-            'image' => $imagePath,
-            'platform' => $validated['platform'],
-            'tanggal_publish' => $validated['tanggal_publish'],
-            'status' => $validated['status'],
-        ]);
-
-        // Buat entri Analitik secara otomatis
-        Analitik::create([
-            'konten_id' => $konten->id,
-            'platform' => $konten->platform,
-        ]);
-
-        return redirect()->route('konten.index')->with('success', 'Konten berhasil ditambahkan!');
+    $imagePath = null;
+    if ($request->hasFile('image')) {
+        $imagePath = $request->file('image')->store('images', 'public');
     }
+
+    $konten = Konten::create([
+        'user_id' => $user->id,
+        'judul' => $validated['judul'],
+        'deskripsi' => $validated['deskripsi'], // <-- INI BARIS YANG PERLU DITAMBAHKAN
+        'image' => $imagePath,
+        'platform' => $validated['platform'],
+        'tanggal_publish' => $validated['tanggal_publish'],
+        'status' => $validated['status'],
+    ]);
+
+    // Buat entri Analitik secara otomatis
+    Analitik::create([
+        'konten_id' => $konten->id,
+        'platform' => $konten->platform,
+    ]);
+
+    return redirect()->route('konten.index')->with('success', 'Konten berhasil ditambahkan!');
+}
 
     public function preview()
     {
@@ -71,13 +73,90 @@ class KontenController extends Controller
 
     public function show($id)
     {
-        $konten = Konten::findOrFail($id);
+        $konten = Konten::where('user_id', auth()->id())->findOrFail($id);
         return view('konten.show', compact('konten'));
     }
+    
+    // ===================================================================
+    // KODE BARU UNTUK EDIT, UPDATE, DAN DELETE DITAMBAHKAN DI SINI
+    // ===================================================================
+
+    /**
+     * Menampilkan form untuk mengedit konten.
+     */
+    public function edit(Konten $konten)
+    {
+        // Pastikan user hanya bisa mengedit konten miliknya sendiri
+        if (auth()->id() !== $konten->user_id) {
+            abort(403, 'AKSES DITOLAK');
+        }
+
+        return view('konten.edit', compact('konten'));
+    }
+
+    /**
+     * Memperbarui konten di database.
+     */
+    public function update(Request $request, Konten $konten)
+    {
+        // Pastikan user hanya bisa mengupdate konten miliknya sendiri
+        if (auth()->id() !== $konten->user_id) {
+            abort(403, 'AKSES DITOLAK');
+        }
+
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'platform' => 'required|in:instagram,facebook',
+            'tanggal_publish' => 'required|date',
+        ]);
+
+        // Handle upload gambar baru
+        if ($request->hasFile('image')) {
+            // Hapus gambar lama jika ada
+            if ($konten->image) {
+                Storage::disk('public')->delete($konten->image);
+            }
+            $validated['image'] = $request->file('image')->store('images', 'public');
+        }
+
+        $konten->update($validated);
+
+        return redirect()->route('konten.index')->with('success', 'Konten berhasil diperbarui!');
+    }
+
+    /**
+     * Menghapus konten dari database.
+     */
+    public function destroy(Konten $konten)
+    {
+        // Pastikan user hanya bisa menghapus konten miliknya sendiri
+        if (auth()->id() !== $konten->user_id) {
+            abort(403, 'AKSES DITOLAK');
+        }
+
+        // Hapus gambar dari storage jika ada
+        if ($konten->image) {
+            Storage::disk('public')->delete($konten->image);
+        }
+        
+        // Hapus data analitik terkait
+        $konten->analitik()->delete();
+
+        // Hapus konten
+        $konten->delete();
+
+        return redirect()->route('konten.index')->with('success', 'Konten berhasil dihapus.');
+    }
+
+    // ===================================================================
+    // KODE LAMA UNTUK ENGAGEMENT
+    // ===================================================================
 
     public function markUploaded(Request $request, $id)
     {
-        $konten = Konten::findOrFail($id);
+        $konten = Konten::where('user_id', auth()->id())->findOrFail($id);
         $konten->update(['status' => 'published']);
 
         $user = auth()->user();

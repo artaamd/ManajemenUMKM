@@ -11,14 +11,25 @@ use Illuminate\Support\Facades\Storage;
 class AnalitikController extends Controller
 {
     public function index()
-    {
-        $analitiks = Analitik::with(['konten', 'konten.user'])->get();
-        return view('analitik.index', compact('analitiks'));
-    }
+{
+    // Mengambil data Analitik yang relasi 'konten'-nya 
+    // dimiliki oleh pengguna yang sedang login.
+    $analitiks = Analitik::whereHas('konten', function ($query) {
+        $query->where('user_id', auth()->id());
+    })->with(['konten' => function ($query) {
+        // Mengurutkan berdasarkan tanggal publish terbaru
+        $query->orderBy('tanggal_publish', 'desc');
+    }])->get();
+
+    return view('analitik.index', compact('analitiks'));
+}
 
     public function edit($kontenId)
     {
-        $analitik = Analitik::where('konten_id', $kontenId)->firstOrFail();
+        $analitik = Analitik::where('konten_id', $kontenId)
+                        ->whereHas('konten', function ($query) {
+                            $query->where('user_id', auth()->id());
+                        })->firstOrFail();
         $konten = $analitik->konten;
         $sevenDaysPassed = $konten->created_at->addDays(7)->lte(now());
 
@@ -39,7 +50,11 @@ class AnalitikController extends Controller
             return redirect()->route('analitik.index')->with('error', 'Metode tidak didukung. Gunakan form untuk mengirim data.');
         }
 
-        $analitik = Analitik::where('konten_id', $kontenId)->firstOrFail();
+         $analitik = Analitik::where('konten_id', $kontenId)
+                        ->whereHas('konten', function ($query) {
+                            $query->where('user_id', auth()->id());
+                        })->firstOrFail();
+
         $konten = $analitik->konten;
         $sevenDaysPassed = $konten->created_at->addDays(7)->lte(now());
 

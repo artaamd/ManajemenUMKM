@@ -1,14 +1,14 @@
 @extends('layouts.app')
 @section('title', 'Preview Tampilan Konten')
 @section('content')
-    <div class="container-fluid p-0 m-0">
+    <div class="">
         <div class="row m-0">
-            <div class="col-12 p-3">
+            <div class="col-15 p-3">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-primary text-white">
                         <h4 class="mb-0"><i class="bi bi-eye-fill me-2"></i>Preview Tampilan Konten</h4>
                     </div>
-                    <div class="card-body p-4">
+                    <div class="card-body p-8">
                         @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 <i class="bi bi-check-circle me-2"></i>{{ session('success') }}

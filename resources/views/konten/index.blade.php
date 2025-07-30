@@ -38,6 +38,7 @@
                                                 <th class="py-3">Tanggal Dibuat</th>
                                                 <th class="py-3">Tanggal Publish</th>
                                                 <th class="py-3">Status</th>
+                                                <th class="py-3">Aksi</th>
                                         
                                             </tr>
                                         </thead>
@@ -67,7 +68,20 @@
                                                             {{ now()->gte($konten->created_at) ? 'Sudah Terunggah' : 'Draft' }}
                                                         </span>
                                                     </td>
-                                                   
+                                                   <td class="py-3">
+                                                    <div class="d-flex">
+                                                        <a href="{{ route('konten.edit', $konten) }}" class="btn btn-warning btn-sm me-2">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </a>
+                                                        <form action="{{ route('konten.destroy', $konten) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menghapus konten ini?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
