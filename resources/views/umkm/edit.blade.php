@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Edit UMKM')
 @section('content')
-    <div class="container-fluid">
+    <div class="">
         <div class="card">
             <div class="card-body">
                 @if ($errors->any())

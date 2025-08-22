@@ -6,15 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Konten extends Model
 {
-    protected $fillable = [
-        'judul',
-        'deskripsi', // <-- DITAMBAHKAN DI SINI
-        'image',     // <-- DITAMBAHKAN JUGA UNTUK GAMBAR
-        'platform',
-        'tanggal_publish',
-        'durasi',
-        'status',
-        'user_id',
+    protected $guarded = [];
+
+    protected $table = 'kontens';
+
+    /**
+     * TAMBAHKAN BLOK INI
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'tanggal_publish' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // Relasi balik ke User

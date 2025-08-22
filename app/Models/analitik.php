@@ -14,6 +14,6 @@ class Analitik extends Model
 
     public function konten()
     {
-        return $this->belongsTo(Konten::class);
+        return $this->belongsTo(Konten::class, 'konten_id');
     }
 }

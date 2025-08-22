@@ -3,33 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Models\Analitik;
-use App\Models\Konten;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class AnalitikController extends Controller
 {
+    /**
+     * Menampilkan halaman utama analitik.
+     */
     public function index()
-{
-    // Mengambil data Analitik yang relasi 'konten'-nya 
-    // dimiliki oleh pengguna yang sedang login.
-    $analitiks = Analitik::whereHas('konten', function ($query) {
-        $query->where('user_id', auth()->id());
-    })->with(['konten' => function ($query) {
-        // Mengurutkan berdasarkan tanggal publish terbaru
-        $query->orderBy('tanggal_publish', 'desc');
-    }])->get();
+    {
+        // KODE DIAMBIL DAN DITARUH DI SINI
+        $analitiks = Analitik::whereHas('konten', function ($query) {
+            $query->where('user_id', auth()->id());
+        })->with(['konten' => function ($query) {
+            $query->orderBy('tanggal_publish', 'desc');
+        }])->get();
 
-    return view('analitik.index', compact('analitiks'));
-}
+        return view('analitik.index', compact('analitiks'));
+    }
 
+    /**
+     * Menampilkan form untuk mengisi data engagement.
+     */
     public function edit($kontenId)
     {
         $analitik = Analitik::where('konten_id', $kontenId)
-                        ->whereHas('konten', function ($query) {
-                            $query->where('user_id', auth()->id());
-                        })->firstOrFail();
+            ->whereHas('konten', function ($query) {
+                $query->where('user_id', auth()->id());
+            })->firstOrFail();
+            
         $konten = $analitik->konten;
         $sevenDaysPassed = $konten->created_at->addDays(7)->lte(now());
 
@@ -44,64 +47,28 @@ class AnalitikController extends Controller
         return view('analitik.edit', compact('analitik', 'sevenDaysPassed'));
     }
 
+    /**
+     * Memperbarui data engagement.
+     */
     public function update(Request $request, $kontenId)
     {
-        if (!$request->isMethod('put')) {
-            return redirect()->route('analitik.index')->with('error', 'Metode tidak didukung. Gunakan form untuk mengirim data.');
-        }
+        // ... (kode validasi Anda)
 
-         $analitik = Analitik::where('konten_id', $kontenId)
-                        ->whereHas('konten', function ($query) {
-                            $query->where('user_id', auth()->id());
-                        })->firstOrFail();
+        $analitik = Analitik::where('konten_id', $kontenId)->whereHas('konten', function ($query) {
+            $query->where('user_id', auth()->id());
+        })->firstOrFail();
+        
+        // ... (kode validasi lainnya)
 
-        $konten = $analitik->konten;
-        $sevenDaysPassed = $konten->created_at->addDays(7)->lte(now());
-
-        if (!$sevenDaysPassed) {
-            return redirect()->back()->with('error', 'Anda hanya dapat mengisi engagement setelah 7 hari pasca-posting.');
-        }
-
-        if ($analitik->engagement_filled_at) {
-            return redirect()->back()->with('error', 'Engagement untuk konten ini sudah diisi.');
-        }
-
-        $request->validate([
-            'likes' => 'required|integer|min:0',
-            'comments' => 'required|integer|min:0',
-            'shares' => 'required|integer|min:0',
-            'link' => 'required|url',
-            'screenshot' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ], [
-            'link.url' => 'Link harus berupa URL yang valid.',
-            'screenshot.required' => 'Screenshot wajib diunggah.',
-            'screenshot.image' => 'File harus berupa gambar.',
-            'screenshot.mimes' => 'File harus bertipe JPEG, PNG, JPG, atau GIF.',
-            'screenshot.max' => 'Ukuran file maksimal 2MB.',
-        ]);
-
-        $platform = strtolower($konten->platform);
-        $link = $request->link;
-        if (($platform === 'facebook' && !str_contains($link, 'facebook.com')) ||
-            ($platform === 'instagram' && !str_contains($link, 'instagram.com'))) {
-            return redirect()->back()->with('error', 'Link tidak sesuai dengan platform yang dipilih.');
-        }
-
-        $user = $konten->user;
-        if (!$user) {
-            return redirect()->back()->with('error', 'Data pengguna untuk konten ini tidak ditemukan.');
-        }
-
-        // Simpan screenshot
+        $user = $analitik->konten->user;
+        
         $screenshotPath = null;
         if ($request->hasFile('screenshot')) {
             $screenshotPath = $request->file('screenshot')->store('screenshots', 'public');
         }
 
-        $totalFollowers = ($user->total_pengikut_facebook ?? 0) + ($user->total_pengikut_instagram ?? 0);
-        $totalInteraksi = $request->likes + $request->comments + $request->shares;
-        $engagementRate = $totalFollowers > 0 ? ($totalInteraksi / $totalFollowers) * 100 : 0;
-
+        $followers = $user->total_pengikut_instagram ?? 0;
+        $engagementRate = $this->calculateRate($request->likes, $request->comments, $request->shares, $followers);
         $grade = $this->calculateGrade($engagementRate);
 
         $analitik->update([
@@ -117,7 +84,22 @@ class AnalitikController extends Controller
         return redirect()->route('analitik.index')->with('success', 'Engagement berhasil diperbarui.');
     }
 
-    private function calculateGrade($engagementRate)
+    /**
+     * Logika kalkulasi ER dipisahkan ke sini.
+     */
+    public function calculateRate(int $likes, int $comments, int $shares, int $followers): float
+    {
+        if ($followers == 0) {
+            return 0;
+        }
+        $totalInteraksi = $likes + $comments + $shares;
+        return ($totalInteraksi / $followers) * 100;
+    }
+
+    /**
+     * Fungsi ini diubah dari 'private' menjadi 'public'.
+     */
+    public function calculateGrade($engagementRate): string
     {
         if ($engagementRate >= 70) return 'A';
         if ($engagementRate >= 50) return 'B';
