@@ -146,7 +146,7 @@
                     </div>
                     <h3 class="text-2xl font-semibold mb-3">Analitik Pencapaian</h3>
                     <p class="text-gray-600 leading-relaxed mb-4">
-                        Pantau performa bisnis Anda dengan grading engagement rate untuk strategi terbaik.
+                        Pantau performa bisnis Anda dengan Penilaian Tingkat Interaksi untuk strategi terbaik.
                     </p>
                 </div>
                 <div class="bg-gray-50 p-8 rounded-2xl card-hover">
@@ -169,7 +169,7 @@
             <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
                 Bergabunglah dengan ratusan UMKM yang telah sukses menggunakan platform kami.
             </p>
-            <a href="{{ route('umkm.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-medium inline-flex items-center transition-colors">
+            <a href="{{ route('login') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-medium inline-flex items-center transition-colors">
                 Daftar Sekarang <i class="fas fa-arrow-right ml-2"></i>
             </a>
         </div>

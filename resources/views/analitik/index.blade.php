@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Analitik')
+@section('title', 'Penilaian Tingkat Interaksi')
 @section('content')
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -15,12 +15,12 @@
     @endif
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-gradient-primary text-primary">
-            <h4 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Analitik Konten yang sudah anda buat</h4>
+            <h4 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Isi Hasil Interaksi</h4>
         </div>
         <div class="card-body p-0">
             @if($analitiks->isEmpty())
                 <div class="alert alert-info text-center p-4">
-                    <i class="bi bi-info-circle me-2"></i>Belum ada data analitik.
+                    <i class="bi bi-info-circle me-2"></i>Belum ada data Nilai Interaksi.
                 </div>
             @else
                 <div class="table-responsive">

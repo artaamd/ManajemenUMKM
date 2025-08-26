@@ -179,7 +179,7 @@
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('analitik.index') }}" class="nav-link {{ request()->routeIs('analitik.*') ? 'active' : '' }}">
-                                <i class="bi bi-bar-chart"></i> Grading Engangement Rate
+                                <i class="bi bi-bar-chart"></i> Penilaian Tingkat Interaksi
                             </a>
                         </li>
                         <li class="nav-item">
