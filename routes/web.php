@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/konten/{konten}/edit', [KontenController::class, 'edit'])->name('konten.edit')->middleware('role:umkm');
     Route::put('/konten/{konten}', [KontenController::class, 'update'])->name('konten.update')->middleware('role:umkm');
     Route::delete('/konten/{konten}', [KontenController::class, 'destroy'])->name('konten.destroy')->middleware('role:umkm');
+    Route::get('/admin/users/create', [UmkmController::class, 'createByAdmin'])->name('admin.users.create')->middleware('role:admin');
+    Route::post('/admin/users', [UmkmController::class, 'storeByAdmin'])->name('admin.users.store')->middleware('role:admin');
 
     // Tambahkan route untuk edit dan hapus UMKM (hanya untuk admin)
     Route::get('/umkm/{id}/edit', [UmkmController::class, 'edit'])->name('umkm.edit')->middleware('role:admin');

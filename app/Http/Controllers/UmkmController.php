@@ -248,4 +248,33 @@ class UmkmController extends Controller
 
         return redirect()->route('laporan.umkm')->with('success', 'Data UMKM berhasil dihapus!');
     }
+     public function createByAdmin()
+    {
+        return view('admin.users.create');
+    }
+    public function storeByAdmin(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|confirmed|min:8',
+            'lokasi' => 'required|string|in:Kota Tengah,Kota Selatan,Kota Barat,Kota Timur,Hulonthalangi,Dungingi,Dumbo Raya,Kota Utara,Sipatana',
+            // ... (validasi lain bisa ditambahkan sesuai kebutuhan)
+        ]);
+
+        User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'umkm', // Role diatur secara otomatis sebagai 'umkm'
+            'lokasi' => $validated['lokasi'],
+            // Isi field lain dengan nilai default jika perlu
+            'nib' => $request->nib,
+            'akun_facebook' => $request->akun_facebook,
+            'akun_instagram' => $request->akun_instagram,
+            'total_pengikut_instagram' => $request->total_pengikut_instagram ?? 0,
+        ]);
+
+        return redirect()->route('laporan.umkm')->with('success', 'Pengguna UMKM baru berhasil ditambahkan!');
+    }
 }

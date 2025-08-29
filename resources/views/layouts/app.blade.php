@@ -164,6 +164,11 @@
                                 <i class="bi bi-star"></i> Laporan Grade Konten
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.users.create') }}" class="nav-link">
+                                <i class="bi bi-person-plus-fill"></i> Tambah Pengguna UMKM
+                            </a>
+                        </li>
     
                     @else
                         <!-- Sidebar untuk UMKM -->
