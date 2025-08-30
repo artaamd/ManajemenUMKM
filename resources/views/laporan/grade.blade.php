@@ -160,7 +160,7 @@
                                     @endif
                                 </div>
                                 <div class="card-footer bg-light text-muted text-center">
-                                    <small>© {{ date('Y') }} Manajemen UMKM - xAI Powered</small>
+                                    <small>© {{ date('Y') }} Manajemen Konten Digital UMKM Kota Gorontalo </small>
                                 </div>
                             </div>
                         </div>
