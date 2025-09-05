@@ -51,7 +51,7 @@
                     <button type="submit" class="btn btn-primary w-100">Masuk</button>
                 </form>
                 <div class="text-center mt-3">
-                   <!-- <a href="{{ route('password.request') }}" class="text-primary">Lupa Kata Sandi?</a> -->
+                    <a href="{{ route('password.request') }}" class="text-primary">Lupa Kata Sandi?</a> 
                 </div>
             </div>
 
