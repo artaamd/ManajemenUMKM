@@ -11,7 +11,7 @@
         <!-- Tab Navigasi -->
         <ul class="nav nav-tabs mb-4" id="authTab" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Login</button>
+                <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Masuk</button>
             </li>
             <li class="nav-item" role="tabpanel">
                 <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">Registrasi</button>
@@ -48,10 +48,10 @@
                         <input type="checkbox" class="form-check-input" id="remember" name="remember">
                         <label class="form-check-label" for="remember">Ingat Saya</label>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                    <button type="submit" class="btn btn-primary w-100">Masuk</button>
                 </form>
                 <div class="text-center mt-3">
-                    <a href="{{ route('password.request') }}" class="text-primary">Lupa Kata Sandi?</a>
+                   <!-- <a href="{{ route('password.request') }}" class="text-primary">Lupa Kata Sandi?</a> -->
                 </div>
             </div>
 
@@ -136,7 +136,7 @@
 
             <!-- Tombol Login sebagai Admin -->
             <div class="text-center mt-4">
-                <a href="{{ route('admin.login') }}" class="btn btn-outline-primary">Login sebagai Admin</a>
+                <a href="{{ route('admin.login') }}" class="btn btn-outline-primary">Masuk sebagai Admin</a>
             </div>
         </div>
     </div>
