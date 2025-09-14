@@ -13,7 +13,6 @@ class AnalitikController extends Controller
      */
     public function index()
     {
-        // KODE DIAMBIL DAN DITARUH DI SINI
         $analitiks = Analitik::whereHas('konten', function ($query) {
             $query->where('user_id', auth()->id());
         })->with(['konten' => function ($query) {
@@ -52,58 +51,63 @@ class AnalitikController extends Controller
      */
     public function update(Request $request, $kontenId)
     {
-        // ... (kode validasi Anda)
+        $request->validate([
+            'likes' => 'required|integer|min:0',
+            'comments' => 'required|integer|min:0',
+            'shares' => 'required|integer|min:0',
+            'screenshot' => 'required|image|max:2048',
+        ]);
 
         $analitik = Analitik::where('konten_id', $kontenId)->whereHas('konten', function ($query) {
             $query->where('user_id', auth()->id());
         })->firstOrFail();
         
-        // ... (kode validasi lainnya)
+        $screenshotPath = $request->file('screenshot')->store('screenshots', 'public');
 
-        $user = $analitik->konten->user;
+        // Menghitung skor engagement berdasarkan total interaksi
+        $engagementScore = $this->calculateScore($request->likes, $request->comments, $request->shares);
         
-        $screenshotPath = null;
-        if ($request->hasFile('screenshot')) {
-            $screenshotPath = $request->file('screenshot')->store('screenshots', 'public');
-        }
-
-        $followers = $user->total_pengikut_instagram ?? 0;
-        $engagementRate = $this->calculateRate($request->likes, $request->comments, $request->shares, $followers);
-        $grade = $this->calculateGrade($engagementRate);
+        // Menentukan grade berdasarkan skor
+        $grade = $this->calculateGrade($engagementScore);
 
         $analitik->update([
             'likes' => $request->likes,
             'comments' => $request->comments,
             'shares' => $request->shares,
-            'engagement_rate' => $engagementRate,
+            'engagement_rate' => $engagementScore, // Kolom 'engagement_rate' diisi dengan skor total
             'grade' => $grade,
             'engagement_filled_at' => now(),
             'screenshot' => $screenshotPath,
         ]);
 
-        return redirect()->route('analitik.index')->with('success', 'Engagement berhasil diperbarui.');
+        return redirect()->route('analitik.index')->with('success', 'Skor engagement berhasil diperbarui.');
     }
 
     /**
-     * Logika kalkulasi ER dipisahkan ke sini.
+     * Menghitung SKOR TOTAL INTERAKSI.
+     * @return int
      */
-    public function calculateRate(int $likes, int $comments, int $shares, int $followers): float
+    public function calculateScore(int $likes, int $comments, int $shares): int
     {
-        if ($followers == 0) {
-            return 0;
+        return $likes + $comments + $shares;
+    }
+
+    /**
+     * Menentukan grade berdasarkan total skor interaksi.
+     * Angka-angka ini adalah contoh dan dapat Anda sesuaikan.
+     * @return string
+     */
+    public function calculateGrade($engagementScore): string
+    {
+        if ($engagementScore >= 1000) {
+            return 'A'; // Sangat Baik
         }
-        $totalInteraksi = $likes + $comments + $shares;
-        return ($totalInteraksi / $followers) * 100;
-    }
-
-    /**
-     * Fungsi ini diubah dari 'private' menjadi 'public'.
-     */
-    public function calculateGrade($engagementRate): string
-    {
-        if ($engagementRate >= 70) return 'A';
-        if ($engagementRate >= 50) return 'B';
-        if ($engagementRate >= 25) return 'C';
-        return 'D';
+        if ($engagementScore >= 500) {
+            return 'B'; // Baik
+        }
+        if ($engagementScore >= 100) {
+            return 'C'; // Cukup
+        }
+        return 'D'; // Perlu Peningkatan
     }
 }

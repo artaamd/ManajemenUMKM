@@ -31,7 +31,7 @@
                                 <th class="py-3 text-center">Likes</th>
                                 <th class="py-3 text-center">Comments</th>
                                 <th class="py-3 text-center">Shares</th>
-                                <th class="py-3 text-center">Engagement Rate (%)</th>
+                                <th class="py-3 text-center">Skor</th>
                                 <th class="py-3 text-center">Grade</th>
                                 <th class="py-3 text-center">Screenshot</th>
                                 <th class="py-3 text-center">Aksi</th>

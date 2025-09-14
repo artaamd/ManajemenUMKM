@@ -246,7 +246,7 @@ public function store(Request $request)
 
         $analitik->save();
 
-        return redirect()->route('konten.index')->with('success', 'Engagement berhasil diperbarui.');
+        //return redirect()->route('konten.index')->with('success', 'Engagement berhasil diperbarui.');
     }
 
     private function calculateGrade($engagementRate)
