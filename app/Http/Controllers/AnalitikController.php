@@ -108,13 +108,13 @@ class AnalitikController extends Controller
     public function calculateGrade($engagementRate): string
     {
         // Skala ini umum digunakan untuk ER by Follower/Reach
-        if ($engagementRate >= 5) { // Di atas 5% dianggap sangat baik
+        if ($engagementRate >= 100) { // Di atas 5% dianggap sangat baik
             return 'A';
         }
-        if ($engagementRate >= 3.5) { // 3.5% - 4.99% dianggap baik
+        if ($engagementRate >= 50) { // 3.5% - 4.99% dianggap baik
             return 'B';
         }
-        if ($engagementRate >= 1) { // 1% - 3.49% dianggap cukup/rata-rata
+        if ($engagementRate >= 15) { // 1% - 3.49% dianggap cukup/rata-rata
             return 'C';
         }
         return 'D'; // Di bawah 1% perlu peningkatan
