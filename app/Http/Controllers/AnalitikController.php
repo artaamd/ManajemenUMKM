@@ -108,6 +108,6 @@ class AnalitikController extends Controller
         if ($engagementScore >= 100) {
             return 'C'; // Cukup
         }
-        return 'D'; // Perlu Peningkatan
+        return 'D'; // Perlu Peningkata
     }
 }
