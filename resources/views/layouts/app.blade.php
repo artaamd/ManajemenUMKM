@@ -3,18 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}"> <!-- Tambahkan CSRF token untuk AJAX -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Manajemen UMKM')</title>
+
+    <!-- HANYA SATU BARIS INI UNTUK MEMUAT SEMUA ASET UTAMA (TERMASUK BOOTSTRAP) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- Aset CSS lain yang tidak dimuat melalui Vite -->
     <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('assets/img/logokota.png') }}">
+
+    <!-- Tempat untuk CSS spesifik halaman -->
+    @stack('styles')
+
     <style>
+        /* Gaya CSS custom Anda bisa tetap di sini, tidak perlu diubah */
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f5f7fb;
@@ -24,12 +31,12 @@
             display: flex;
             min-height: 100vh;
         }
-         .sidebar .text-center .img-fluid {
-            max-width: 40px; /* Atur lebar maksimal logo */
-            height: auto; /* Tinggi akan menyesuaikan secara otomatis */
-            display: block; /* Pastikan gambar dianggap sebagai blok */
-            margin-left: auto; /* Atur margin kiri otomatis */
-            margin-right: auto; /* Atur margin kanan otomatis */
+        .sidebar .text-center .img-fluid {
+            max-width: 40px;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
         .sidebar {
             width: 250px;
@@ -126,14 +133,6 @@
             }
         }
     </style>
-    <!-- Tambahkan window.chartData sebelum app.js dimuat -->
-    <script>
-        window.chartData = {
-            labels: @json(request()->routeIs('dashboard') && auth()->user() && auth()->user()->role === 'umkm' ? ($content_trends['labels'] ?? []) : []),
-            instagram: @json(request()->routeIs('dashboard') && auth()->user() && auth()->user()->role === 'umkm' ? ($content_trends['instagram'] ?? []) : []),
-            facebook: @json(request()->routeIs('dashboard') && auth()->user() && auth()->user()->role === 'umkm' ? ($content_trends['facebook'] ?? []) : []),
-        };
-    </script>
 </head>
 <body>
     <div class="container-fluid">
@@ -243,23 +242,22 @@
                 </div>
             </header>
             <main>
-                @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
                 @yield('content')
             </main>
         </div>
     </div>
 
-    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- Script lain yang tidak dimuat melalui Vite -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdn.tinymce.com/4/tinymce.min.js"></script>
     <script src="{{ asset('assets/js/main.js') }}"></script>
-    @yield('scripts')
+
+    <!-- Tempat untuk script spesifik halaman -->
+    @stack('scripts')
+
     <script>
-    document.querySelectorAll('.dropdown-item').forEach(item => {
+    // Script untuk notifikasi
+    document.querySelectorAll('.dropdown-item[data-notification-id]').forEach(item => {
         item.addEventListener('click', function() {
             const notificationId = this.getAttribute('data-notification-id');
             if (notificationId) {

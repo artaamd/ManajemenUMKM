@@ -9,22 +9,44 @@ use Illuminate\Support\Facades\Storage;
 class AnalitikController extends Controller
 {
     /**
-     * Menampilkan halaman utama analitik.
+     * Menampilkan halaman utama analitik dengan fungsionalitas pencarian.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $analitiks = Analitik::whereHas('konten', function ($query) {
-            $query->where('user_id', auth()->id());
-        })->with(['konten' => function ($query) {
+        $user = auth()->user();
+        $searchTerm = $request->input('search');
+
+        // Cek hanya untuk user dengan role 'umkm'
+        if ($user->role === 'umkm') {
+            $profileUpdatedAt = $user->profile_updated_at;
+            
+            if (!$profileUpdatedAt || now()->subDays(7)->gt($profileUpdatedAt)) {
+                return redirect()->route('umkm.profil')
+                    ->with('warning', 'Untuk mengakses fitur Penilaian Tingkat Interaksi, Anda wajib memperbarui profil Anda setiap 7 hari sekali. Silakan perbarui data Anda.');
+            }
+        }
+
+        // Mulai query untuk mengambil data analitik
+        $query = Analitik::whereHas('konten', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        });
+
+        // Terapkan filter pencarian jika ada
+        if ($searchTerm) {
+            $query->whereHas('konten', function ($q) use ($searchTerm) {
+                $q->where('judul', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        $analitiks = $query->with(['konten' => function ($query) {
             $query->orderBy('tanggal_publish', 'desc');
         }])->get();
 
-        return view('analitik.index', compact('analitiks'));
+        return view('analitik.index', compact('analitiks', 'searchTerm'));
     }
 
-    /**
-     * Menampilkan form untuk mengisi data engagement.
-     */
+    // --- Method lain tidak diubah ---
+
     public function edit($kontenId)
     {
         $analitik = Analitik::where('konten_id', $kontenId)
@@ -46,15 +68,13 @@ class AnalitikController extends Controller
         return view('analitik.edit', compact('analitik', 'sevenDaysPassed'));
     }
 
-    /**
-     * Memperbarui data engagement.
-     */
     public function update(Request $request, $kontenId)
     {
         $request->validate([
             'likes' => 'required|integer|min:0',
             'comments' => 'required|integer|min:0',
             'shares' => 'required|integer|min:0',
+            'link_postingan' => 'required|url',
             'screenshot' => 'required|image|max:2048',
         ]);
 
@@ -67,16 +87,15 @@ class AnalitikController extends Controller
         
         $screenshotPath = $request->file('screenshot')->store('screenshots', 'public');
 
-        // Menghitung Engagement Rate (%) dengan rumus standar
         $engagementRate = $this->calculateRate($request->likes, $request->comments, $request->shares, $followers);
         
-        // Menentukan grade berdasarkan persentase ER
         $grade = $this->calculateGrade($engagementRate);
 
         $analitik->update([
             'likes' => $request->likes,
             'comments' => $request->comments,
             'shares' => $request->shares,
+            'link_postingan' => $request->link_postingan,
             'engagement_rate' => $engagementRate,
             'grade' => $grade,
             'engagement_filled_at' => now(),
@@ -86,10 +105,6 @@ class AnalitikController extends Controller
         return redirect()->route('analitik.index')->with('success', 'Engagement Rate berhasil diperbarui.');
     }
 
-    /**
-     * Menghitung Engagement Rate berdasarkan Total Interaksi dan Followers.
-     * @return float
-     */
     public function calculateRate(int $likes, int $comments, int $shares, int $followers): float
     {
         if ($followers == 0) {
@@ -100,23 +115,19 @@ class AnalitikController extends Controller
 
         return ($totalInteraksi / $followers) * 100;
     }
-
-    /**
-     * Menentukan grade berdasarkan standar umum Engagement Rate (%).
-     * @return string
-     */
+    
     public function calculateGrade($engagementRate): string
     {
-        // Skala ini umum digunakan untuk ER by Follower/Reach
-        if ($engagementRate >= 100) { // Di atas 5% dianggap sangat baik
+        if ($engagementRate >= 100) { 
             return 'A';
         }
-        if ($engagementRate >= 50) { // 3.5% - 4.99% dianggap baik
+        if ($engagementRate >= 50) {
             return 'B';
         }
-        if ($engagementRate >= 15) { // 1% - 3.49% dianggap cukup/rata-rata
+        if ($engagementRate >= 15) {
             return 'C';
         }
-        return 'D'; // Di bawah 1% perlu peningkatan
+        return 'D';
     }
 }
+

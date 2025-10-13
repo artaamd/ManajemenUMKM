@@ -32,6 +32,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'profile_updated_at' => 'datetime', // <-- TAMBAHKAN BARIS INI
     ];
 
     public function kontens()

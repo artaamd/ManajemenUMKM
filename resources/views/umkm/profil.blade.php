@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Profil UMKM')
 @section('content')
+
     <div class="container-fluid p-0 m-0">
         <div class="row m-0">
             <div class="col-12 p-3">
@@ -16,6 +17,18 @@
                             </div>
                         @endif
 
+                        {{-- ======================================================= --}}
+                        {{-- BLOK BARU YANG DITAMBAHKAN --}}
+                        {{-- ======================================================= --}}
+                        @if (session('warning'))
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                {{ session('warning') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+                        {{-- ======================================================= --}}
+
                         @if ($errors->any())
                             <div class="alert alert-danger">
                                 <ul class="mb-0">
@@ -25,7 +38,7 @@
                                 </ul>
                             </div>
                         @endif
-
+                            
                         <form method="POST" action="{{ route('umkm.updateProfil') }}" class="needs-validation" novalidate enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
@@ -105,7 +118,6 @@
             </div>
         </div>
     </div>
-
     @push('scripts')
         <script>
             // Bootstrap validation
@@ -125,3 +137,4 @@
         </script>
     @endpush
 @endsection
+

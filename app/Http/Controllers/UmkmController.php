@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Konten;
+use App\Models\Analitik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,62 +15,51 @@ class UmkmController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $umkms = [];
-        $umkms_per_kecamatan = [];
-        $content_counts = [
-            'instagram' => 0,
-            'facebook' => 0,
-        ];
-        $content_trends = [
-            'instagram' => [],
-            'facebook' => [],
-            'labels' => [],
+        
+        // Inisialisasi semua variabel yang mungkin dikirim ke view dalam satu array
+        $data = [
+            'user' => $user,
+            'notifications' => $user->unreadNotifications,
+            'umkms' => [],
+            'umkms_per_kecamatan' => [],
+            'content_counts' => ['instagram' => 0, 'facebook' => 0],
+            'averageEngagementRate' => 0,
+            'content_trends' => ['labels' => [], 'instagram' => [], 'facebook' => []],
         ];
 
         if ($user->role === 'admin') {
-            $umkms = User::where('role', 'umkm')->get();
-            // UMKM per kecamatan
-            $umkms_per_kecamatan = User::where('role', 'umkm')
+            $data['umkms'] = User::where('role', 'umkm')->get();
+            $data['umkms_per_kecamatan'] = User::where('role', 'umkm')
                 ->groupBy('lokasi')
                 ->selectRaw('lokasi, COUNT(*) as jumlah')
                 ->pluck('jumlah', 'lokasi')
                 ->toArray();
-            // Ambil semua konten untuk UMKM
-            $umkm_ids = User::where('role', 'umkm')->pluck('id')->toArray();
-            // Query konten dengan case-insensitive dan log untuk debug
-            $content_counts['instagram'] = Konten::whereRaw('LOWER(platform) = ?', ['instagram'])
-                ->whereIn('user_id', $umkm_ids)
-                ->count();
-            $content_counts['facebook'] = Konten::whereRaw('LOWER(platform) = ?', ['facebook'])
-                ->whereIn('user_id', $umkm_ids)
-                ->count();
-            // Log untuk cek data
-            \Log::info('Dashboard Admin Data:', [
-                'umkm_ids' => $umkm_ids,
-                'instagram_count' => $content_counts['instagram'],
-                'facebook_count' => $content_counts['facebook'],
-            ]);
-        } else {
-            $content_counts['instagram'] = $user->kontens()
-                ->where('platform', 'instagram')
-                ->count();
-            $content_counts['facebook'] = $user->kontens()
-                ->where('platform', 'facebook')
-                ->count();
+            
+            $umkm_ids = $data['umkms']->pluck('id');
+            
+            $data['content_counts']['instagram'] = Konten::where('platform', 'instagram')->whereIn('user_id', $umkm_ids)->count();
+            $data['content_counts']['facebook'] = Konten::where('platform', 'facebook')->whereIn('user_id', $umkm_ids)->count();
+            
+            // Menghitung rata-rata engagement rate untuk grafik
+            $data['averageEngagementRate'] = Analitik::whereNotNull('engagement_rate')->avg('engagement_rate');
 
+        } else { // Logika untuk role 'umkm'
+            $data['content_counts']['instagram'] = $user->kontens()->where('platform', 'instagram')->count();
+            $data['content_counts']['facebook'] = $user->kontens()->where('platform', 'facebook')->count();
+
+            // Logika untuk grafik tren konten per bulan
             $startDate = now()->subMonths(5)->startOfMonth();
             $endDate = now()->endOfMonth();
             $months = collect();
             $currentDate = $startDate->copy();
-
             while ($currentDate <= $endDate) {
                 $months->push($currentDate->format('M Y'));
                 $currentDate->addMonth();
             }
 
-            $content_trends['labels'] = $months->toArray();
+            $data['content_trends']['labels'] = $months->toArray();
 
-            $content_trends['instagram'] = $months->map(function ($month) use ($user) {
+            $data['content_trends']['instagram'] = $months->map(function ($month) use ($user) {
                 $monthDate = \Carbon\Carbon::createFromFormat('M Y', $month);
                 return $user->kontens()
                     ->where('platform', 'instagram')
@@ -78,7 +68,7 @@ class UmkmController extends Controller
                     ->count();
             })->toArray();
 
-            $content_trends['facebook'] = $months->map(function ($month) use ($user) {
+            $data['content_trends']['facebook'] = $months->map(function ($month) use ($user) {
                 $monthDate = \Carbon\Carbon::createFromFormat('M Y', $month);
                 return $user->kontens()
                     ->where('platform', 'facebook')
@@ -88,16 +78,7 @@ class UmkmController extends Controller
             })->toArray();
         }
 
-        $notifications = $user->unreadNotifications;
-
-        return view('dashboard', compact('user', 'umkms', 'umkms_per_kecamatan', 'content_counts', 'notifications', 'content_trends'));
-    }
-
-    // Method lain tidak diubah
-    public function report()
-    {
-        $umkms = User::where('role', 'umkm')->get();
-        return view('laporan.umkm', compact('umkms'));
+        return view('dashboard', $data);
     }
 
     public function create()
@@ -107,7 +88,6 @@ class UmkmController extends Controller
 
     public function store(Request $request)
     {
-        \Log::info('UmkmController@store accessed', $request->all());
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -131,6 +111,7 @@ class UmkmController extends Controller
             'akun_instagram' => $validated['akun_instagram'],
             'total_pengikut_facebook' => $validated['total_pengikut_facebook'] ?? 0,
             'total_pengikut_instagram' => $validated['total_pengikut_instagram'] ?? 0,
+            'profile_updated_at' => now(), // Menetapkan timestamp saat registrasi
         ]);
 
         Auth::login($user);
@@ -140,7 +121,20 @@ class UmkmController extends Controller
 
     public function profil()
     {
-        return view('umkm.profil', ['user' => auth()->user()]);
+        $user = auth()->user();
+        $warningMessage = null;
+
+        if ($user->role === 'umkm') {
+            $profileUpdatedAt = $user->profile_updated_at;
+            if (!$profileUpdatedAt || now()->subDays(7)->gt($profileUpdatedAt)) {
+                $warningMessage = 'Profil Anda belum diperbarui lebih dari 7 hari. Fitur Penilaian Tingkat Interaksi tidak dapat diakses hingga Anda menyimpan ulang jumlah followers terbaru.';
+            }
+        }
+
+        return view('umkm.profil', [
+            'user' => $user,
+            'warningMessage' => $warningMessage
+        ]);
     }
 
     public function updateProfil(Request $request)
@@ -181,30 +175,26 @@ class UmkmController extends Controller
         $user->total_pengikut_facebook = $validated['total_pengikut_facebook'] ?? 0;
         $user->total_pengikut_instagram = $validated['total_pengikut_instagram'] ?? 0;
         $user->profile_image = $validated['profile_image'];
+        $user->profile_updated_at = now(); // Mencatat waktu sekarang saat profil diupdate
         $user->save();
 
         return redirect()->route('umkm.profil')->with('success', 'Profil berhasil diperbarui!');
     }
 
-    public function markNotificationAsRead($id)
-    {
+    // ... sisa method tidak perlu diubah ...
+    public function markNotificationAsRead($id) {
         $notification = auth()->user()->notifications()->findOrFail($id);
         $notification->markAsRead();
-
         return response()->json(['success' => true]);
-    }
-
-    public function edit($id)
-    {
+     }
+    public function edit($id) {
         $umkm = User::findOrFail($id);
         if ($umkm->role !== 'umkm') {
             return redirect()->route('laporan.umkm')->with('error', 'Data tersebut bukan UMKM.');
         }
         return view('umkm.edit', compact('umkm'));
-    }
-
-    public function update(Request $request, $id)
-    {
+     }
+    public function update(Request $request, $id) {
         $umkm = User::findOrFail($id);
         if ($umkm->role !== 'umkm') {
             return redirect()->route('laporan.umkm')->with('error', 'Data tersebut bukan UMKM.');
@@ -236,10 +226,8 @@ class UmkmController extends Controller
         $umkm->save();
 
         return redirect()->route('laporan.umkm')->with('success', 'Data UMKM berhasil diperbarui!');
-    }
-
-    public function destroy($id)
-    {
+     }
+    public function destroy($id) {
         $umkm = User::findOrFail($id);
         if ($umkm->role !== 'umkm') {
             return redirect()->route('laporan.umkm')->with('error', 'Data tersebut bukan UMKM.');
@@ -247,28 +235,24 @@ class UmkmController extends Controller
         $umkm->delete();
 
         return redirect()->route('laporan.umkm')->with('success', 'Data UMKM berhasil dihapus!');
-    }
-     public function createByAdmin()
-    {
+     }
+    public function createByAdmin() {
         return view('admin.users.create');
-    }
-    public function storeByAdmin(Request $request)
-    {
+     }
+    public function storeByAdmin(Request $request) {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|confirmed|min:8',
             'lokasi' => 'required|string|in:Kota Tengah,Kota Selatan,Kota Barat,Kota Timur,Hulonthalangi,Dungingi,Dumbo Raya,Kota Utara,Sipatana',
-            // ... (validasi lain bisa ditambahkan sesuai kebutuhan)
         ]);
 
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'umkm', // Role diatur secara otomatis sebagai 'umkm'
+            'role' => 'umkm',
             'lokasi' => $validated['lokasi'],
-            // Isi field lain dengan nilai default jika perlu
             'nib' => $request->nib,
             'akun_facebook' => $request->akun_facebook,
             'akun_instagram' => $request->akun_instagram,
@@ -276,5 +260,6 @@ class UmkmController extends Controller
         ]);
 
         return redirect()->route('laporan.umkm')->with('success', 'Pengguna UMKM baru berhasil ditambahkan!');
-    }
+     }
 }
+
