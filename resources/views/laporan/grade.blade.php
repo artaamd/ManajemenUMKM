@@ -1,15 +1,16 @@
 @extends('layouts.app')
 @section('title', 'Laporan Grade UMKM')
+
 @section('content')
     <div class="container-fluid p-0">
         <div class="card shadow-sm border-0 w-100">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Ringkasan Grade Konten per UMKM</h4>
+                <h4 class="mb-0"><i class="bi bi-star-fill me-2"></i>Ringkasan Grade Konten per UMKM</h4>
             </div>
             <div class="card-body p-3">
                 @if ($umkms->isEmpty() && !isset($searchTerm) && !isset($selectedLokasi) && !isset($selectedNibStatus))
                     <div class="alert alert-warning text-center">
-                        <i class="bi bi-exclamation-triangle me-2"></i>Belum ada data UMKM.
+                        <i class="bi bi-exclamation-triangle me-2"></i>Belum ada data UMKM untuk ditampilkan.
                     </div>
                 @else
                     <!-- FORM PENCARIAN DAN FILTER -->
@@ -80,9 +81,18 @@
                         <!-- Kolom Kanan: Detail Konten -->
                         <div class="col-md-9">
                             <div class="card border-light shadow-sm h-100">
-                                <div class="card-header bg-light">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
                                     @if (isset($selectedUmkm))
                                         <h5 class="mb-0">Konten dari: {{ $selectedUmkm->name }}</h5>
+                                        {{-- Tombol Cetak PDF/Excel yang Ditambahkan Kembali --}}
+                                        <div class="no-print">
+                                            <a href="{{ route('laporan.grade.cetak-per-umkm', $selectedUmkm->id) }}" class="btn btn-sm btn-danger" title="Unduh PDF">
+                                                <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                                            </a>
+                                            <a href="{{ route('laporan.grade.cetak-excel-per-umkm', $selectedUmkm->id) }}" class="btn btn-sm btn-success" title="Unduh Excel">
+                                                <i class="bi bi-file-earmark-excel me-1"></i> Excel
+                                            </a>
+                                        </div>
                                     @else
                                         <h5 class="mb-0">Detail Konten</h5>
                                     @endif
@@ -100,11 +110,12 @@
                                                         <tr>
                                                             <th>No</th>
                                                             <th>Judul Konten</th>
-                                                            <th>Foto Postingan</th>
+                                                            <th>Foto</th>
                                                             <th>Platform</th>
                                                             <th>Rate (%)</th>
                                                             <th>Grade</th>
                                                             <th>Tgl Publish</th>
+                                                            <th>Link</th>
                                                             <th>Screenshot</th>
                                                         </tr>
                                                     </thead>
@@ -113,7 +124,7 @@
                                                             <tr>
                                                                 <td>{{ $index + 1 }}</td>
                                                                 <td>{{ $konten->judul ?? '-' }}</td>
-                                                                <td>
+                                                                <td class="text-center">
                                                                     @if($konten->image)
                                                                         <a href="{{ Storage::url($konten->image) }}" target="_blank">
                                                                             <img src="{{ Storage::url($konten->image) }}" alt="Foto Postingan" class="screenshot-thumbnail">
@@ -122,20 +133,26 @@
                                                                         -
                                                                     @endif
                                                                 </td>
-                                                                <td>
-                                                                    <span class="badge {{ optional($konten)->platform == 'Facebook' ? 'bg-primary' : 'bg-danger' }}">
-                                                                        {{ $konten->platform ?? '-' }}
+                                                                <td class="text-center">
+                                                                    <span class="badge {{ optional($konten)->platform == 'facebook' ? 'bg-primary' : 'bg-danger' }}">
+                                                                        {{ ucfirst($konten->platform) ?? '-' }}
                                                                     </span>
                                                                 </td>
-                                                                <td>{{ optional($konten->analitik)->engagement_rate ? number_format($konten->analitik->engagement_rate, 2) : '-' }}</td>
-                                                                <td>
+                                                                <td class="text-center">{{ optional($konten->analitik)->engagement_rate ? number_format($konten->analitik->engagement_rate, 2) : '-' }}</td>
+                                                                <td class="text-center">
                                                                     <span class="badge {{ optional($konten->analitik)->grade == 'A' ? 'bg-success' : (optional($konten->analitik)->grade == 'B' ? 'bg-info' : (optional($konten->analitik)->grade == 'C' ? 'bg-warning' : 'bg-danger')) }}">
-                                                                        {{ $konten->analitik->grade ?? '-' }}
+                                                                        {{ optional($konten->analitik)->grade ?? '-' }}
                                                                     </span>
                                                                 </td>
-                                                                <td>{{ optional($konten)->tanggal_publish ? \Carbon\Carbon::parse($konten->tanggal_publish)->format('d-m-Y') : '-' }}</td>
-                                                              
-                                                                <td>
+                                                                <td class="text-center">{{ optional($konten)->tanggal_publish ? \Carbon\Carbon::parse($konten->tanggal_publish)->format('d-m-Y') : '-' }}</td>
+                                                                <td class="text-center">
+                                                                    @if(optional($konten->analitik)->link_postingan)
+                                                                        <a href="{{ $konten->analitik->link_postingan }}" class="btn btn-sm btn-outline-primary" target="_blank">Lihat</a>
+                                                                    @else
+                                                                        -
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center">
                                                                     @if(optional($konten->analitik)->screenshot)
                                                                         <a href="{{ Storage::url($konten->analitik->screenshot) }}" target="_blank">
                                                                             <img src="{{ Storage::url($konten->analitik->screenshot) }}" alt="Screenshot" class="screenshot-thumbnail">
@@ -161,7 +178,6 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 @endif
             </div>
@@ -172,12 +188,12 @@
 @push('styles')
     <style>
         .umkm-list {
-            max-height: 600px; /* Atur tinggi maksimal daftar UMKM */
+            max-height: 600px;
             overflow-y: auto;
         }
         .screenshot-thumbnail {
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             object-fit: cover;
             border-radius: 5px;
             border: 1px solid #ddd;
@@ -197,13 +213,11 @@
         const lokasiSelect = document.getElementById('lokasi');
         const nibSelect = document.getElementById('status_nib');
 
-        // Fungsi submit hanya untuk filter, bukan saat klik link UMKM
         const submitForm = () => {
             filterForm.action = "{{ route('laporan.grade') }}";
             filterForm.submit();
         };
 
-        // Pasang event listener hanya pada elemen form
         if(lokasiSelect) lokasiSelect.addEventListener('change', submitForm);
         if(nibSelect) nibSelect.addEventListener('change', submitForm);
         

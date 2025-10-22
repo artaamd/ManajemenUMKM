@@ -50,7 +50,11 @@ class LaporanController extends Controller
             }
         }
         
-        $umkms = $query->latest()->get();
+        // =======================================================
+        // PERUBAHAN UTAMA: Mengganti urutan dari terbaru ke abjad
+        // =======================================================
+        $umkms = $query->orderBy('name', 'asc')->get();
+        // =======================================================
 
         return view('laporan.umkm', [
             'umkms' => $umkms,
@@ -71,10 +75,8 @@ class LaporanController extends Controller
             'Hulonthalangi', 'Dungingi', 'Dumbo Raya', 'Kota Utara', 'Sipatana'
         ];
 
-        // Memulai query dengan eager loading yang dibutuhkan halaman ini
         $query = User::where('role', 'umkm')->with(['kontens', 'kontens.analitik']);
 
-        // Menerapkan logika filter dan pencarian yang sama
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -98,7 +100,8 @@ class LaporanController extends Controller
             }
         }
 
-        $umkms = $query->latest()->get();
+        // Mengurutkan berdasarkan abjad juga di halaman grade
+        $umkms = $query->orderBy('name', 'asc')->get();
 
         return view('laporan.grade', [
             'umkms' => $umkms,
@@ -117,15 +120,13 @@ class LaporanController extends Controller
         $selectedUmkm = User::where('id', $umkmId)->where('role', 'umkm')->with(['kontens', 'kontens.analitik'])->firstOrFail();
         $kontens = $selectedUmkm->kontens()->with('analitik')->get();
         
-        // Ambil daftar UMKM tanpa filter untuk ditampilkan di sidebar
-        $umkms = User::where('role', 'umkm')->with(['kontens', 'kontens.analitik'])->latest()->get();
+        $umkms = User::where('role', 'umkm')->with(['kontens', 'kontens.analitik'])->orderBy('name', 'asc')->get();
         
         $lokasiOptions = [
             'Kota Tengah', 'Kota Selatan', 'Kota Barat', 'Kota Timur',
             'Hulonthalangi', 'Dungingi', 'Dumbo Raya', 'Kota Utara', 'Sipatana'
         ];
 
-        // Kirim semua variabel yang dibutuhkan oleh view
         return view('laporan.grade', [
             'umkms' => $umkms,
             'kontens' => $kontens,
@@ -141,7 +142,7 @@ class LaporanController extends Controller
 
     public function cetakUmkmPdf()
     {
-        $umkms = User::where('role', 'umkm')->get();
+        $umkms = User::where('role', 'umkm')->orderBy('name', 'asc')->get(); // Diurutkan juga untuk PDF
         $html = view('laporan.umkm-pdf', compact('umkms'))->render();
         $pdf = PDF::loadHTML($html);
         return $pdf->download('laporan_daftar_umkm_'.date('d_m_Y').'.pdf');
@@ -149,7 +150,7 @@ class LaporanController extends Controller
 
     public function cetakGradePdf()
     {
-        $umkms = User::where('role', 'umkm')->with(['kontens', 'kontens.analitik'])->get();
+        $umkms = User::where('role', 'umkm')->with(['kontens', 'kontens.analitik'])->orderBy('name', 'asc')->get();
         $html = view('laporan.grade-pdf', compact('umkms'))->render();
         $pdf = PDF::loadHTML($html);
         return $pdf->download('laporan_grade_umkm_'.date('d_m_Y').'.pdf');
@@ -177,3 +178,4 @@ class LaporanController extends Controller
         return Excel::download(new DaftarUmkmExport(), $fileName);
     }
 }
+
